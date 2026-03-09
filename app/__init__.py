@@ -1,11 +1,13 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
+from flask_socketio import SocketIO
 from config import Config
 
 # Initialize extensions
 db = SQLAlchemy()
 login_manager = LoginManager()
+socketio = SocketIO()
 
 def create_app(config_class=Config):
     app = Flask(__name__)
@@ -14,13 +16,10 @@ def create_app(config_class=Config):
     # Initialize extensions with app
     db.init_app(app)
     login_manager.init_app(app)
-    login_manager.login_view = 'auth.login'  # Redirect to login page if not authenticated
-    login_manager.login_message = 'Please log in to access this page.'
-    from app.models import User
+    socketio.init_app(app, cors_allowed_origins="*")  # Allow all origins for development
 
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
+    login_manager.login_view = 'auth.login'
+    login_manager.login_message = 'Please log in to access this page.'
 
     # Register blueprints
     from app.routes import auth, main, trading, ai
@@ -29,7 +28,10 @@ def load_user(user_id):
     app.register_blueprint(trading.bp)
     app.register_blueprint(ai.bp)
 
-    # Create database tables (for development)
+    # Import socket events here to avoid circular imports
+    from app import socket_events
+
+    # Create database tables
     with app.app_context():
         db.create_all()
 
