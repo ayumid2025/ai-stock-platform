@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}{{ symbol }} Stock Details{% endblock %}
+
+{% block content %}
+<h1>{{ symbol }} Stock Details</h1>
+
+<div class="stock-info">
+    <p><strong>Current Price:</strong> ${{ quote.price }}</p>
+    <p><strong>Last Trade Size:</strong> {{ quote.size }}</p>
+    <p><strong>Time:</strong> {{ quote.timestamp }}</p>
+</div>
+
+<h2>Price Chart (Last 30 Days)</h2>
+<canvas id="priceChart" width="400" height="200"></canvas>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Fetch historical data via AJAX
+    fetch(`/api/historical/{{ symbol }}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                document.getElementById('priceChart').insertAdjacentHTML('afterend', '<p>Error loading chart data.</p>');
+                return;
+            }
+            const labels = data.map(item => item.time.substring(0,10)); // just date
+            const prices = data.map(item => item.close);
+
+            const ctx = document.getElementById('priceChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Close Price',
+                        data: prices,
+                        borderColor: 'rgb(75, 192, 192)',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: false
+                        }
+                    }
+                }
+            });
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+</script>
+
+<a href="{{ url_for('main.dashboard') }}">Back to Dashboard</a>
+{% endblock %}
