@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<h1>Welcome, {{ current_user.username }}!</h1>
+
+<h2>Search for a Stock</h2>
+<form action="{{ url_for('main.search') }}" method="get">
+    <label for="symbol">Stock Symbol (e.g., AAPL):</label>
+    <input type="text" id="symbol" name="q" placeholder="AAPL" required>
+    <button type="submit">Search</button>
+</form>
+
+<hr>
+
+<h3>Popular Stocks</h3>
+<ul>
+    <li><a href="{{ url_for('main.stock_detail', symbol='AAPL') }}">Apple (AAPL)</a></li>
+    <li><a href="{{ url_for('main.stock_detail', symbol='MSFT') }}">Microsoft (MSFT)</a></li>
+    <li><a href="{{ url_for('main.stock_detail', symbol='GOOGL') }}">Google (GOOGL)</a></li>
+    <li><a href="{{ url_for('main.stock_detail', symbol='AMZN') }}">Amazon (AMZN)</a></li>
+    <li><a href="{{ url_for('main.stock_detail', symbol='TSLA') }}">Tesla (TSLA)</a></li>
+</ul>
+{% endblock %}
