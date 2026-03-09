@@ -1,3 +1,55 @@
+<h2>AI Prediction</h2>
+<div id="ai-section">
+    <p>Loading AI prediction...</p>
+</div>
+
+<script>
+    // Check if model exists and fetch prediction
+    fetch(`/ai/status/{{ symbol }}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.trained) {
+                // Fetch prediction
+                return fetch(`/ai/predict/{{ symbol }}`);
+            } else {
+                // Show option to train
+                document.getElementById('ai-section').innerHTML = `
+                    <p>No AI model available for {{ symbol }}.</p>
+                    <button id="train-model">Train Model Now</button>
+                `;
+                document.getElementById('train-model').addEventListener('click', function() {
+                    fetch(`/ai/train/{{ symbol }}`, { method: 'POST' })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.message) {
+                                alert(data.message);
+                                location.reload();
+                            } else {
+                                alert('Error: ' + data.error);
+                            }
+                        });
+                });
+                throw new Error('No model');
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                document.getElementById('ai-section').innerHTML = `<p>Error: ${data.error}</p>`;
+            } else {
+                const prob = (data.probability_up * 100).toFixed(2);
+                const direction = data.prediction;
+                const color = direction === 'UP' ? 'green' : 'red';
+                document.getElementById('ai-section').innerHTML = `
+                    <p><strong>Next day prediction:</strong> <span style="color:${color};">${direction}</span></p>
+                    <p><strong>Confidence (probability up):</strong> ${prob}%</p>
+                `;
+            }
+        })
+        .catch(err => {
+            // Already handled in first then
+        });
+</script>
 {% extends "base.html" %}
 
 {% block title %}{{ symbol }} Stock Details{% endblock %}
